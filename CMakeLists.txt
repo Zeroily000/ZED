@@ -42,11 +42,13 @@ SET(SRC_FOLDER src)
 FILE(GLOB_RECURSE SRC_FILES "${SRC_FOLDER}/*.cpp")
 
 ADD_EXECUTABLE(${execName} ${SRC_FILES})
-set_property(TARGET ${execName} PROPERTY OUTPUT_NAME "ZED Multi Input")
+##set_property(TARGET ${execName} PROPERTY OUTPUT_NAME "ZED Multi Input")
+set_property(TARGET ${execName} PROPERTY OUTPUT_NAME "MultiCameras")
 
 add_definitions(-std=c++0x)
 
 TARGET_LINK_LIBRARIES(${execName}
+                        ${SPECIAL_OS_LIBS}
                         ${ZED_LIBRARIES}
                         ${OpenCV_LIBRARIES}
                         ${CUDA_LIBRARIES} ${CUDA_npps_LIBRARY} ${CUDA_nppi_LIBRARY}
