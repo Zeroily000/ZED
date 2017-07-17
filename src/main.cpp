@@ -34,6 +34,7 @@
 #include <iostream>
 #include <unistd.h>
 #include <errno.h>
+#include <sys/stat.h>
 
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
@@ -72,9 +73,9 @@ int state = DISPLAY;
 std::vector<sl::Mat> LeftVedio[NUM_CAMERAS];
 std::vector<sl::Mat> RightVedio[NUM_CAMERAS];
 
-std::string LeftVedioPath[NUM_CAMERAS];
-std::string RightVedioPath[NUM_CAMERAS];
-std::string TimestampPath[NUM_CAMERAS];
+std::string LeftVedioFolder[NUM_CAMERAS];
+std::string RightVedioFolder[NUM_CAMERAS];
+std::string TimestampFolder[NUM_CAMERAS];
 
 void grab_run(int x) {
     sl::Mat tmp_left, tmp_right;
@@ -178,12 +179,9 @@ int main(int argc, char **argv) {
         dir = cwd;
         std::size_t found = dir.find_last_of("/\\");
         dir = dir.substr(0,found);
-        found = dir.find_last_of("/\\");
-        dir = dir.substr(0,found);
     }
     else
         perror("getcwd() error");
-    // end test
     
 
     // Create every ZED and init them
@@ -203,14 +201,16 @@ int main(int argc, char **argv) {
         height = zed[i]->getResolution().height;
         View[i] = cv::Mat(height, width * 2, CV_8UC4, 1);
 
-        // LeftVedioPath[i] = "/home/andy/Documents/zed/test/data/camera_" + std::to_string(i) + "/left/";
-        // RightVedioPath[i] = "/home/andy/Documents/zed/test/data/camera_" + std::to_string(i) + "/right/";
-        // TimestampPath[i] = "/home/andy/Documents/zed/test/data/camera_" + std::to_string(i) + "/";
-
-        LeftVedioPath[i] = "/data/camera_" + std::to_string(i) + "/left/";
-        RightVedioPath[i] = "/data/camera_" + std::to_string(i) + "/right/";
-        TimestampPath[i] = "/data/camera_" + std::to_string(i) + "/";
+        LeftVedioFolder[i] = "/data/camera_" + std::to_string(i) + "/left/";
+        RightVedioFolder[i] = "/data/camera_" + std::to_string(i) + "/right/";
+        TimestampFolder[i] = "/data/camera_" + std::to_string(i) + "/";
     }
+    
+    
+
+    
+
+
 
     char key = ' ';
 
@@ -235,12 +235,6 @@ int main(int argc, char **argv) {
     while (key != 'q') {
         // Resize and imshow
         for (int i = 0; i < NUM_CAMERAS; i++) {
-            // char wnd_name[21];
-            // sprintf(wnd_name, "ZED no. %d", i);
-            // cv::resize(SbSResult[i], ZED_LRes[i], DisplaySize);
-            // cv::imshow(wnd_name, ZED_LRes[i]);
-
-
             cv::resize(View[i], Display[i], DisplaySize);
             cv::imshow(Win[i], Display[i]);
             // cv::imshow(Win[i], View[i]);
@@ -283,61 +277,83 @@ int main(int argc, char **argv) {
     std::cout << "Done" << std::endl;
 
     // Total frames
-    std::cout << "Frames of camera0: " << LeftVedio[0].size() << std::endl;
-    std::cout << "Frames of camera1: " << LeftVedio[1].size() << std::endl;
-    if(LeftVedio[0].empty() || LeftVedio[1].empty()) return 0;
+    for(int i = 0; i < NUM_CAMERAS; i++){
+        if(LeftVedio[i].empty()) return 0;
+        std::cout << "Frames of camera" << std::to_string(i) << ": " << LeftVedio[i].size() << std::endl;
+    }
 
     // Set path
     int sys;
-    std::string cmd, path;
+    std::string cmd, folder, path, yn, newline;
+    struct stat sb;
     for(int i = 0; i < NUM_CAMERAS; i++){
         // Left view
-        std::cout << "The default path for the left view of camera No." << i << " is: "<< LeftVedioPath[i] << std::endl;
-        std::cout << "Input a new path if you want to change it: " << std::endl;
-        path = std::cin.get();
-        if(path[0] != '\n'){
-            cmd = "rm -r " + dir + LeftVedioPath[i];
-            sys = system(cmd.c_str());
-            LeftVedioPath[i] = path;
-        }       
+        std::cout << "The default folder for the left view of camera No." << i << " is: "<< LeftVedioFolder[i] << std::endl;
+        std::cout << "Input a new folder if you want to change it: " << std::endl;
+        folder = std::cin.get();
+        if(folder[0] != '\n'){
+            LeftVedioFolder[i] = folder;
+        }
+        path = dir + LeftVedioFolder[i];
+        if (stat(path.c_str(), &sb) == 0 && S_ISDIR(sb.st_mode)){
+            std::cout << "Folder exists, do you want to delete it (Y/N)?" << std::endl;
+            std::cin >> yn;
+            if(yn != "N" && yn != "n"){
+                cmd = "rm -r " + path;
+                sys = system(cmd.c_str());
+            }
+            newline = std::cin.get();
+        }
         std::cout << std::endl;
 
 
         // Right view
-        std::cout << "The default path for the Right view of camera No." << i << " is: "<< RightVedioPath[i] << std::endl;
-        std::cout << "Input a new path if you want to change it: " << std::endl;
-        path = std::cin.get();
-        if(path[0] != '\n'){
-            cmd = "rm -r " + dir + RightVedioPath[i];
-            sys = system(cmd.c_str());
-            RightVedioPath[i] = path;
+        std::cout << "The default folder for the Right view of camera No." << i << " is: "<< RightVedioFolder[i] << std::endl;
+        std::cout << "Input a new folder if you want to change it: " << std::endl;
+        folder = std::cin.get();
+        if(folder[0] != '\n'){
+            RightVedioFolder[i] = folder;
         }
-
-        
+        path = dir + RightVedioFolder[i];
+        if (stat(path.c_str(), &sb) == 0 && S_ISDIR(sb.st_mode)){
+            std::cout << "Folder exists, do you want to delete it (Y/N)?" << std::endl;
+            std::cin >> yn;
+            if(yn != "N" && yn != "n"){
+                cmd = "rm -r " + path;
+                sys = system(cmd.c_str());
+            }
+            newline = std::cin.get();
+        }
         std::cout << std::endl;
 
 
         // Timestamp
-        std::cout << "The default path for the timestamp of camera No." << i << " is: "<< TimestampPath[i] << std::endl;
-        std::cout << "Input a new path if you want to change it: " << std::endl;
-        path = std::cin.get();
-        if(path[0] != '\n'){
-            cmd = "rm -r " + dir + TimestampPath[i];
-            sys = system(cmd.c_str());
-            TimestampPath[i] = path;
+        std::cout << "The default folder for the timestamp of camera No." << i << " is: "<< TimestampFolder[i] << std::endl;
+        std::cout << "Input a new folder if you want to change it: " << std::endl;
+        folder = std::cin.get();
+        if(folder[0] != '\n'){
+            TimestampFolder[i] = folder;
         }
-
-        
+        path = dir + TimestampFolder[i];
+        if (stat(path.c_str(), &sb) == 0 && S_ISDIR(sb.st_mode)){
+            std::cout << "Folder exists, do you want to delete it (Y/N)?" << std::endl;
+            std::cin >> yn;
+            if(yn != "N" && yn != "n"){
+                cmd = "rm -r " + path;
+                sys = system(cmd.c_str());
+            }
+            newline = std::cin.get();
+        }
         std::cout << std::endl;
     }
     for(int i = 0; i < NUM_CAMERAS; i++){
-        cmd = "mkdir -p " + dir + TimestampPath[i];
+        cmd = "mkdir -p " + dir + TimestampFolder[i];
         sys = system(cmd.c_str());
 
-        cmd =  "mkdir -p " + dir + LeftVedioPath[i];
+        cmd =  "mkdir -p " + dir + LeftVedioFolder[i];
         sys = system(cmd.c_str());
 
-        cmd = "mkdir -p " + dir + RightVedioPath[i];
+        cmd = "mkdir -p " + dir + RightVedioFolder[i];
         sys = system(cmd.c_str());
 
         
@@ -349,18 +365,18 @@ int main(int argc, char **argv) {
     for(int i = 0; i < NUM_CAMERAS; i++){
         // Left view
         for(int f = 0; f < LeftVedio[i].size(); f++){
-            std::string filename = dir + LeftVedioPath[i] + std::to_string(Timestamp[i][f]) + ".png";
+            std::string filename = dir + LeftVedioFolder[i] + std::to_string(Timestamp[i][f]) + ".png";
             LeftVedio[i][f].write(filename.c_str());
         }
 
         // Right view
         for(int f = 0; f < RightVedio[i].size(); f++){
-            std::string filename = dir + RightVedioPath[i] + std::to_string(Timestamp[i][f]) + ".png";
+            std::string filename = dir + RightVedioFolder[i] + std::to_string(Timestamp[i][f]) + ".png";
             RightVedio[i][f].write(filename.c_str());
         }
 
         // Timestamp
-        std::string filename = dir + TimestampPath[i] + "/timestamp" + std::to_string(i) + ".txt";
+        std::string filename = dir + TimestampFolder[i] + "/timestamp" + std::to_string(i) + ".txt";
         outs[i].open(filename, std::ofstream::out);
         for(int f = 0; f < Timestamp[i].size()-1; f++){
             outs[i] << Timestamp[i][f] << '\n';
@@ -372,3 +388,5 @@ int main(int argc, char **argv) {
 
     return 0;
 }
+
+main.cpp
