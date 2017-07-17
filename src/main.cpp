@@ -77,6 +77,8 @@ std::string LeftVedioFolder[NUM_CAMERAS];
 std::string RightVedioFolder[NUM_CAMERAS];
 std::string TimestampFolder[NUM_CAMERAS];
 
+std::string foldername = "data";
+
 void grab_run(int x) {
     sl::Mat tmp_left, tmp_right;
     sl::RuntimeParameters rt_params;
@@ -133,7 +135,7 @@ int main(int argc, char **argv) {
 
     std::string res;
     // Resolution
-    if(argc == 2){
+    if(argc > 1){
         res = argv[1];
         if(res == "2K"){
             params.camera_resolution = sl::RESOLUTION_HD2K;
@@ -150,35 +152,23 @@ int main(int argc, char **argv) {
     }
 
     // Resolution & frame
-    if(argc == 3){
-        res = argv[1];
-        if(res == "2K"){
-            params.camera_resolution = sl::RESOLUTION_HD2K;
-            params.camera_fps = 15;
-        }
-        else if(res == "1080"){
-            params.camera_resolution = sl::RESOLUTION_HD1080;
-            params.camera_fps = std::atoi(argv[2]);
-        }
-
-        else if(res == "720"){
-            params.camera_resolution = sl::RESOLUTION_HD720;
-            params.camera_fps = std::atoi(argv[2]);
-        }
-
-        else if(res == "VGA"){
-            params.camera_resolution = sl::RESOLUTION_VGA;
-            params.camera_fps = std::atoi(argv[2]);
-        }
+    if(argc > 2){
+        params.camera_fps = std::atoi(argv[2]);
     }
+
+    // Folder name
+    if(argc >3)
+        foldername = argv[3];
     
     // Get current dir
     char cwd[1024];
     std::string dir;
     if (getcwd(cwd, sizeof(cwd)) != NULL){
         dir = cwd;
+        // std::size_t found = dir.find_last_of("/\\");
         std::size_t found = dir.find_last_of("/\\");
-        dir = dir.substr(0,found);
+        dir = dir.substr(0,found+1);
+        // std::cout << dir << std::endl;
     }
     else
         perror("getcwd() error");
@@ -201,19 +191,16 @@ int main(int argc, char **argv) {
         height = zed[i]->getResolution().height;
         View[i] = cv::Mat(height, width * 2, CV_8UC4, 1);
 
-        LeftVedioFolder[i] = "/data/camera_" + std::to_string(i) + "/left/";
-        RightVedioFolder[i] = "/data/camera_" + std::to_string(i) + "/right/";
-        TimestampFolder[i] = "/data/camera_" + std::to_string(i) + "/";
+        LeftVedioFolder[i] = foldername + "/cam" + std::to_string(i) + "/left/";
+        RightVedioFolder[i] = foldername + "/cam" + std::to_string(i) + "/right/";
+        TimestampFolder[i] = foldername + "/cam" + std::to_string(i) + "/";
+        // LeftVedioFolder[i] = "/data/cam" + std::to_string(i) + "calibrate" + "/left/";
+        // RightVedioFolder[i] = "/data/cam" + std::to_string(i) + "calibrate" + "/right/";
+        // TimestampFolder[i] = "/data/cam" + std::to_string(i) + "calibrate/";
     }
     
     
-
-    
-
-
-
     char key = ' ';
-
     // Create each grabbing thread with the camera number as parameters
     std::vector<std::thread*> thread_vec;
     for (int i = 0; i < NUM_CAMERAS; i++)
@@ -282,70 +269,19 @@ int main(int argc, char **argv) {
         std::cout << "Frames of camera" << std::to_string(i) << ": " << LeftVedio[i].size() << std::endl;
     }
 
-    // Set path
-    int sys;
-    std::string cmd, folder, path, yn, newline;
+
+    // Delete existing folders
     struct stat sb;
-    for(int i = 0; i < NUM_CAMERAS; i++){
-        // Left view
-        std::cout << "The default folder for the left view of camera No." << i << " is: "<< LeftVedioFolder[i] << std::endl;
-        std::cout << "Input a new folder if you want to change it: " << std::endl;
-        folder = std::cin.get();
-        if(folder[0] != '\n'){
-            LeftVedioFolder[i] = folder;
-        }
-        path = dir + LeftVedioFolder[i];
-        if (stat(path.c_str(), &sb) == 0 && S_ISDIR(sb.st_mode)){
-            std::cout << "Folder exists, do you want to delete it (Y/N)?" << std::endl;
-            std::cin >> yn;
-            if(yn != "N" && yn != "n"){
-                cmd = "rm -r " + path;
-                sys = system(cmd.c_str());
-            }
-            newline = std::cin.get();
-        }
-        std::cout << std::endl;
-
-
-        // Right view
-        std::cout << "The default folder for the Right view of camera No." << i << " is: "<< RightVedioFolder[i] << std::endl;
-        std::cout << "Input a new folder if you want to change it: " << std::endl;
-        folder = std::cin.get();
-        if(folder[0] != '\n'){
-            RightVedioFolder[i] = folder;
-        }
-        path = dir + RightVedioFolder[i];
-        if (stat(path.c_str(), &sb) == 0 && S_ISDIR(sb.st_mode)){
-            std::cout << "Folder exists, do you want to delete it (Y/N)?" << std::endl;
-            std::cin >> yn;
-            if(yn != "N" && yn != "n"){
-                cmd = "rm -r " + path;
-                sys = system(cmd.c_str());
-            }
-            newline = std::cin.get();
-        }
-        std::cout << std::endl;
-
-
-        // Timestamp
-        std::cout << "The default folder for the timestamp of camera No." << i << " is: "<< TimestampFolder[i] << std::endl;
-        std::cout << "Input a new folder if you want to change it: " << std::endl;
-        folder = std::cin.get();
-        if(folder[0] != '\n'){
-            TimestampFolder[i] = folder;
-        }
-        path = dir + TimestampFolder[i];
-        if (stat(path.c_str(), &sb) == 0 && S_ISDIR(sb.st_mode)){
-            std::cout << "Folder exists, do you want to delete it (Y/N)?" << std::endl;
-            std::cin >> yn;
-            if(yn != "N" && yn != "n"){
-                cmd = "rm -r " + path;
-                sys = system(cmd.c_str());
-            }
-            newline = std::cin.get();
-        }
-        std::cout << std::endl;
+    std::string path = dir + foldername;
+    std::cout << path << std::endl;
+    std::string cmd;
+    int sys;
+    if(stat(path.c_str(), &sb) == 0 && S_ISDIR(sb.st_mode)){
+        cmd = "rm -r " + path;
+        sys = system(cmd.c_str());
     }
+
+    // Create folders
     for(int i = 0; i < NUM_CAMERAS; i++){
         cmd = "mkdir -p " + dir + TimestampFolder[i];
         sys = system(cmd.c_str());
@@ -355,7 +291,6 @@ int main(int argc, char **argv) {
 
         cmd = "mkdir -p " + dir + RightVedioFolder[i];
         sys = system(cmd.c_str());
-
         
     }
 
@@ -388,5 +323,3 @@ int main(int argc, char **argv) {
 
     return 0;
 }
-
-main.cpp
