@@ -49,13 +49,14 @@
 #define RECORD 1
 #define PAUSE 2
 
-const int NUM_CAMERAS = 2;
+const int NUM_CAMERAS = 1;
 const int FPS = 15;
 const sl::RESOLUTION ZED_RES = sl::RESOLUTION_HD720;
 // const sl::RESOLUTION ZED_RES = sl::RESOLUTION_HD720, RESOLUTION_VGA;
 
 
 sl::Camera* zed[NUM_CAMERAS];
+sl::CameraParameters K[NUM_CAMERAS];
 cv::Mat View[NUM_CAMERAS];
 cv::Mat Display[NUM_CAMERAS];
 
@@ -114,6 +115,7 @@ void grab_run(int x) {
         }
         // sl::sleep_ms(1);
     }
+    zed[x]->close();
     delete zed[x];
 }
 
@@ -187,6 +189,9 @@ int main(int argc, char **argv) {
             return 1;
         }
 
+        // Read camera information
+        K[i] = zed[i]->getCameraInformation().calibration_parameters.left_cam;
+
         width = zed[i]->getResolution().width;
         height = zed[i]->getResolution().height;
         View[i] = cv::Mat(height, width * 2, CV_8UC4, 1);
@@ -194,11 +199,21 @@ int main(int argc, char **argv) {
         LeftVedioFolder[i] = foldername + "/cam" + std::to_string(i) + "/left/";
         RightVedioFolder[i] = foldername + "/cam" + std::to_string(i) + "/right/";
         TimestampFolder[i] = foldername + "/cam" + std::to_string(i) + "/";
-        // LeftVedioFolder[i] = "/data/cam" + std::to_string(i) + "calibrate" + "/left/";
-        // RightVedioFolder[i] = "/data/cam" + std::to_string(i) + "calibrate" + "/right/";
-        // TimestampFolder[i] = "/data/cam" + std::to_string(i) + "calibrate/";
     }
+
     
+    std::cout << std::endl;
+    for(int i = 0; i < NUM_CAMERAS; i++){
+        std::cout << "Camera matrix for ZED no. " << i << ": " << std::endl;
+        std::cout << "fx: " << K[i].fx << std::endl;
+        std::cout << "fy: " << K[i].fy << std::endl;
+        std::cout << "cx: " << K[i].cx << std::endl;
+        std::cout << "cy: " << K[i].cy << std::endl;
+
+        // std::cout << K[i].fx << '\t' << 0 << '\t' << K[i].cx << std::endl;
+        // std::cout << 0 << '\t' << K[i].fy << '\t' << K[i].cy << std::endl;
+        // std::cout << 0 << '\t' << 0 << '\t' << 1 << std::endl;
+    }
     
     char key = ' ';
     // Create each grabbing thread with the camera number as parameters
