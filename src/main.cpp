@@ -42,27 +42,20 @@
 
 #include <sl/Camera.hpp>
 
-// using namespace std;
-
 // Define state
 #define DISPLAY 0
 #define RECORD 1
 #define PAUSE 2
 
-const int NUM_CAMERAS = 1;
-const int FPS = 15;
-const sl::RESOLUTION ZED_RES = sl::RESOLUTION_HD720;
-// const sl::RESOLUTION ZED_RES = sl::RESOLUTION_HD720, RESOLUTION_VGA;
-
+// Camera numbers
+const int NUM_CAMERAS = 2;
+// const int FPS = 15;
+// const sl::RESOLUTION ZED_RES = sl::RESOLUTION_HD720;
 
 sl::Camera* zed[NUM_CAMERAS];
 sl::CameraParameters K[NUM_CAMERAS];
 cv::Mat View[NUM_CAMERAS];
 cv::Mat Display[NUM_CAMERAS];
-
-// cv::Mat LeftView[NUM_CAMERAS];
-// cv::Mat RightView[NUM_CAMERAS];
-
 
 int width, height;
 std::vector<unsigned long long> Timestamp[NUM_CAMERAS];
@@ -84,36 +77,19 @@ void grab_run(int x) {
     sl::Mat tmp_left, tmp_right;
     sl::RuntimeParameters rt_params;
     while (!stop_signal) {
-        // sl::ERROR_CODE res = zed[x]->grab(rt_params);
-
         if (zed[x]->grab() == sl::SUCCESS) {
-        // if (res != sl::SUCCESS) {
-            // Timestamp[x].push_back(zed[x]->getCameraTimestamp());
-
-            // zed[x]->retrieveImage(aux, sl::VIEW_LEFT, sl::MEM_CPU);
-            // cv::Mat(aux.getHeight(), aux.getWidth(), CV_8UC4, aux.getPtr<sl::uchar1>(sl::MEM_CPU)).copyTo(SbSResult[x](cv::Rect(0, 0, width, height)));
-            // // zed[x]->retrieveImage(aux, sl::VIEW_DEPTH, sl::MEM_CPU);
-            // zed[x]->retrieveImage(aux, sl::VIEW_RIGHT, sl::MEM_CPU);
-            // cv::Mat(aux.getHeight(), aux.getWidth(), CV_8UC4, aux.getPtr<sl::uchar1>(sl::MEM_CPU)).copyTo(SbSResult[x](cv::Rect(width, 0, width, height)));
-
-            // test
             zed[x]->retrieveImage(tmp_left, sl::VIEW_LEFT, sl::MEM_CPU);
             cv::Mat(tmp_left.getHeight(), tmp_left.getWidth(), CV_8UC4, tmp_left.getPtr<sl::uchar1>(sl::MEM_CPU)).copyTo(View[x](cv::Rect(0, 0, width, height)));
 
             zed[x]->retrieveImage(tmp_right, sl::VIEW_RIGHT, sl::MEM_CPU);
             cv::Mat(tmp_right.getHeight(), tmp_right.getWidth(), CV_8UC4, tmp_right.getPtr<sl::uchar1>(sl::MEM_CPU)).copyTo(View[x](cv::Rect(width, 0, width, height)));
-            // end test
-            // std::cout << " Timestamp " << x << ": " << Timestamp[x].back() << std::endl;
-            // PRE_Timestamp[x] = ZED_Timestamp[x];
-            // time_t epch = ZED_Timestamp[x];
-            // printf("%i -> %s", epch, asctime(gmtime(&epch)));
+
             if(state == RECORD){
                 LeftVedio[x].push_back(sl::Mat(tmp_left));
                 RightVedio[x].push_back(sl::Mat(tmp_right));
                 Timestamp[x].push_back(zed[x]->getCameraTimestamp());
             }
         }
-        // sl::sleep_ms(1);
     }
     zed[x]->close();
     delete zed[x];
@@ -127,12 +103,11 @@ int main(int argc, char **argv) {
     return -1;
 #endif
 
-    // Default
+    // Default settings
     sl::InitParameters params;
     params.depth_mode = sl::DEPTH_MODE_NONE;
-    // params.depth_mode = sl::DEPTH_MODE_PERFORMANCE;
-    params.camera_resolution = ZED_RES;
-    params.camera_fps = FPS;
+    // params.camera_resolution = ZED_RES;
+    params.camera_fps = 15;
 
 
     std::string res;
@@ -167,10 +142,8 @@ int main(int argc, char **argv) {
     std::string dir;
     if (getcwd(cwd, sizeof(cwd)) != NULL){
         dir = cwd;
-        // std::size_t found = dir.find_last_of("/\\");
         std::size_t found = dir.find_last_of("/\\");
         dir = dir.substr(0,found+1);
-        // std::cout << dir << std::endl;
     }
     else
         perror("getcwd() error");
@@ -209,10 +182,6 @@ int main(int argc, char **argv) {
         std::cout << "fy: " << K[i].fy << std::endl;
         std::cout << "cx: " << K[i].cx << std::endl;
         std::cout << "cy: " << K[i].cy << std::endl;
-
-        // std::cout << K[i].fx << '\t' << 0 << '\t' << K[i].cx << std::endl;
-        // std::cout << 0 << '\t' << K[i].fy << '\t' << K[i].cy << std::endl;
-        // std::cout << 0 << '\t' << 0 << '\t' << 1 << std::endl;
     }
     
     char key = ' ';
@@ -228,12 +197,12 @@ int main(int argc, char **argv) {
     for (int i = 0; i < NUM_CAMERAS; i++)
         Display[i] = cv::Mat(DisplaySize, CV_8UC4);
 
-
-    // Loop until 'q' is pressed
     std::string Win[NUM_CAMERAS];
     for(int i = 0; i < NUM_CAMERAS; i++){
         Win[i] = "Camera No. " + std::to_string(i);
     }
+
+    // Loop until 'q' is pressed
     while (key != 'q') {
         // Resize and imshow
         for (int i = 0; i < NUM_CAMERAS; i++) {
@@ -243,10 +212,8 @@ int main(int argc, char **argv) {
         }
         key = cv::waitKey(20);
 
-        // // Compare Timestamp between both camera (uncomment following line)
-        // for (int i = 0; i < NUM_CAMERAS; i++) std::cout << " Timestamp " << i << ": " << ZED_Timestamp[i] << std::endl;
-        // std::cout << " Timestamp " << 0 << ": " << ZED_Timestamp[0] << std::endl;
-        
+        // Compare Timestamp between both camera (uncomment following line)
+        // for (int i = 0; i < NUM_CAMERAS; i++) std::cout << " Timestamp " << i << ": " << ZED_Timestamp[i] << std::endl;       
 
         if(key == 'r'){
             state = RECORD;

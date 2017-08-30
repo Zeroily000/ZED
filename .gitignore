@@ -4,5 +4,8 @@
 # Except for these:
 !.gitignore
 !CMakeLists.txt
+!/src
 !*.h
 !*.cpp
+!LICENSE
+!README.md
