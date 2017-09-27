@@ -1,4 +1,4 @@
-# Stereolabs ZED - Using multiple ZED
+# Multiple ZED cameras
 
 Use multiple ZED cameras in a single application. Currently available on Linux only. USB 3.0 is recommended. USB 2.0 might cause unstable.
 
@@ -37,17 +37,3 @@ The default value for Resolution is 720, FPS 15, and Folder 'data'.
 - Press 'p' to pause and 'r' to resume.
 - Press 'q' to quit and save each frames.
 - Use timestamps as the filename of every frame.
-- Frames are saved as
-
-    data
-        cam0
-            timestamp0.txt
-            left
-            right
-        cam1
-            timestamp1.txt
-            left
-            right
-        ...
-
-
