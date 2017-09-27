@@ -12,9 +12,6 @@ Use multiple ZED cameras in a single application. Currently available on Linux o
 
 - [ZED SDK](https://www.stereolabs.com/developers/release/2.1/#sdkdownloads_anchor)
 
-
-
-
 ## Build the program
 
 In the directory, open a terminal and execute the following command:
@@ -42,14 +39,15 @@ The default value for Resolution is 720, FPS 15, and Folder 'data'.
 - Use timestamps as the filename of every frame.
 - Frames are saved as
 
-	data
-		cam0
-			timestamp0.txt
-			left
-			right
-		cam1
-			timestamp1.txt
-			left
-			right
-		...
+    data
+        cam0
+            timestamp0.txt
+            left
+            right
+        cam1
+            timestamp1.txt
+            left
+            right
+        ...
+
 
