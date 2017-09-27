@@ -10,7 +10,6 @@ Use multiple ZED cameras in a single application. Currently available on Linux o
 
     #if !defined (HAVE_CUDA) || defined (CUDA_DISABLER) || (CUDART_VERSION >= 8000)
 
-after that.
 - [ZED SDK](https://www.stereolabs.com/developers/release/2.1/#sdkdownloads_anchor)
 
 
@@ -53,3 +52,4 @@ The default value for Resolution is 720, FPS 15, and Folder 'data'.
 			left
 			right
 		...
+
