@@ -1,21 +1,24 @@
 # Stereolabs ZED - Using multiple ZED
 
-This sample shows how to use multiple ZED cameras in a single application. Currently available on Linux only.
+Use multiple ZED cameras in a single application. Currently available on Linux only. USB 3.0 is recommended. USB 2.0 might cause unstable.
 
-## Getting started
-
-- First, download the latest version of the ZED SDK on [stereolabs.com](https://www.stereolabs.com).
-- For more information, read the ZED [API documentation](https://www.stereolabs.com/developers/documentation/API/).
-
-### Prerequisites
+## Prerequisites
 
 - Ubuntu 16.04
-- [ZED SDK](https://www.stereolabs.com/developers/) and its dependencies ([CUDA](https://developer.nvidia.com/cuda-downloads),[OpenCV 3.1](http://opencv.org/downloads.html))
+- [CUDA](https://developer.nvidia.com/cuda-downloads)
+- [OpenCV 3.1](http://opencv.org/releases.html) with CUDA on. If use CUDA 8.0 or higher, modify 'opencv-3.1.0/modules/cudalegacy/src/graphcuts.cpp'. Comment line 45 and add
+
+    #if !defined (HAVE_CUDA) || defined (CUDA_DISABLER) || (CUDART_VERSION >= 8000)
+
+after that.
+- [ZED SDK](https://www.stereolabs.com/developers/release/2.1/#sdkdownloads_anchor)
+
+
 
 
 ## Build the program
 
-Download the sample. In the sample directory, open a terminal and execute the following command:
+In the directory, open a terminal and execute the following command:
 
     mkdir build
     cd build
@@ -26,22 +29,27 @@ Download the sample. In the sample directory, open a terminal and execute the fo
 
 Open a terminal in the 'build' directory and execute the following command:
 
-    ./ZED\ Multi\ Input
+    ./MultiCameras [Resolution] [FPS] [Folder]
+
+The default value for Resolution is 720, FPS 15, and Folder 'data'.
 
 ## How it works
 
 - Video capture for each camera is done in a separate thread for optimal performance. You can specify the number of ZED used by changing the `NUM_CAMERAS` parameter.
-- Each camera has its own timestamp (uncomment a line to display it). These timestamps can be used for device synchronization.
-- OpenCV is used to display the images and depth maps. To stop the application, simply press 'q'.
+- OpenCV is used to display the images in 1/4 size of the captured images.
+- Press 'r' to record.
+- Press 'p' to pause and 'r' to resume.
+- Press 'q' to quit and save each frames.
+- Use timestamps as the filename of every frame.
+- Frames are saved as
 
-
-### Limitations
-
-- This sample works on Linux only.
-- USB bandwidth: The ZED  in 1080p30 mode generates around 250MB/s of image data. USB 3.0 maximum bandwidth is around 400MB/s, so the number of cameras, resolutions and framerates you can use on a single machine will be limited by the USB 3.0 controller on the motherboard. When bandwidth limit is exceeded, corrupted frames (green or purple frames, tearing) can appear.
-- Using a single USB 3.0 controller, here are configurations that we tested:
-  - 2 ZEDs in HD1080 @ 15fps and HD720 @ 30fps
-  - 3 ZEDs in HD720 @ 15fps
-  - 4 ZEDs in VGA @ 30fps
-- To use multiple ZED at full speed on a single computer, we recommend adding USB3.0 PCIe expansion cards.
-- You can also use multiple GPUs to load-balance computations (use `param.device` to select a GPU for a ZED) and improve performance.
+	data
+		cam0
+			timestamp0.txt
+			left
+			right
+		cam1
+			timestamp1.txt
+			left
+			right
+		...

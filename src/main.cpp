@@ -48,7 +48,7 @@
 #define PAUSE 2
 
 // Camera numbers
-const int NUM_CAMERAS = 2;
+const int NUM_CAMERAS = 1;
 // const int FPS = 15;
 // const sl::RESOLUTION ZED_RES = sl::RESOLUTION_HD720;
 
